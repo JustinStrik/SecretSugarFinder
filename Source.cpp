@@ -48,13 +48,13 @@ private:
 	
 };
 
-class AdjacencyMatrix
+class AdjacencyList
 {
 public:
 
 	/*int is the ID, the vector is the complete list of sugars, and when the sugar is in the list of ingredients 
 	the number is either 1 (if the graph is unwieghted) or the weight if it is weighted*/
-	map<int, vector<int>> theMatrix; 
+	map<int, vector<int>> theList; 
 	AdjacencyMatrix() {}
 	~AdjacencyMatrix() {}
 
