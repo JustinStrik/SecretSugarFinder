@@ -4,12 +4,14 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 class Sugar
 {
 public:
 	string name;
+	Sugar(string name_) :name(name_) {}
 	Sugar() {}
 	~Sugar() {}
 };
@@ -62,20 +64,43 @@ private:
 
 };
 
-void readInData(AdjacencyList adjList, EdgeList edList, vector<Sugar*> sugars) {
+void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars) {
 
 	//will have vector with all of the sugars in them
-	string readInData = ""; //read in the ingredients
-	int ID = -1; //read in ID in while loop
-	bool whatever = true;
+	string readInData; //read in the line in file
 
-	while (whatever) //will be getline
+	string ingredients;
+
+	int ID = -1; //read in ID in while loop
+	
+
+	ifstream csv_rdr("branded_foods (id,brand,ingredients )-t.txt");
+	//^reading tab delimited file
+
+	bool header = true;//skip first line(header) when looping 
+
+	while (getline(csv_rdr, readInData)) //will be getline
 	{
-		int ID = -1; //read in, FIX
-		readInData = ""; //read in, FIX
+
+		//read in, FIX
+	   //readInData = ""; //read in, FIX
+		if (header == true) {
+			header = false;
+			continue;
+		}
+		ID = stoi(readInData.substr(0, readInData.find_first_of("\t")));//			
+		readInData = readInData.substr(readInData.find_first_of("\t") + 2);
+
+		ingredients = readInData.substr(readInData.find_first_of("\t") + 1);
+		
+		for (int i = 0; i < ingredients.length(); i++) {//tolower to make find simpler
+			ingredients[i] = tolower(ingredients[i]);
+		}
+
+
 		for (int i = 0; i < sugars.size(); i++)
 		{
-			if (readInData.find(sugars.at(i)->name))
+			if (ingredients.find(sugars.at(i)->name) != string::npos)
 			{
 				adjList.theList.at(ID).push_back(sugars.at(i)); //insert sugar in hashmap at ID
 				edList.theList.push_back({ ID, sugars.at(i) }); //insert pair in vector
@@ -83,6 +108,8 @@ void readInData(AdjacencyList adjList, EdgeList edList, vector<Sugar*> sugars) {
 		}
 
 	}
+
+	csv_rdr.close();
 }
 
 
@@ -107,10 +134,25 @@ vector<Sugar*> EdgeList::search(int ID) {
 
 int main() {
 
-	//Food cheeto = Food(1234, "cheetos");
+	
+	vector<string> sugars_string = {
+		"corn sweetener","ethyl maltol","corn syrup","dextrose","fructose","fruit juice concentrate"
+		"glucose","high-fructose corn syrup","invert sugar","lactose"
+		"maltose","malt syrup","raw sugar","sucrose","sugar syrup",
+		"florida crystals","cane sugar","crystalline fructose",
+		"evaporated cane juice","corn syrup solids","malt syrup",
+		"barley malt","agave nectar","rice syrup","caramel",
+		"panocha","muscovado","molasses","treacle","carob syrup"
 
-	//cout << "Hello world!" << endl;
-	//cout << cheeto.ID << " " << cheeto.name << endl;
+	};//size = 30
+
+	vector<Sugar*> allSugars;
+
+	for (string s : sugars_string) { //filling allSugars
+		allSugars.push_back(new Sugar(s));
+	}
+
+
 	return 0;
 
 
