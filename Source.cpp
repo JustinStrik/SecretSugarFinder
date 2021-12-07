@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 using namespace std;
 
 class Sugar
@@ -38,11 +39,11 @@ class EdgeList
 {
 public:
 	//pair between the food and the sugar
-	vector<pair<int, Sugar*>> theList; //ID and sugar
+	vector<pair<unsigned long long, Sugar*>> theList; //ID and sugar
 	EdgeList() {}
 	~EdgeList() {}
 
-	vector<Sugar*> search(int ID);
+	vector<Sugar*> search(unsigned long long ID);
 
 private:
 
@@ -54,11 +55,11 @@ public:
 
 	/*int is the ID, the vector is the complete list of sugars, and when the sugar is in the list of ingredients
 	the number is either 1 (if the graph is unwieghted) or the weight if it is weighted*/
-	unordered_map<int, vector<Sugar*>> theList;
+	unordered_map<unsigned long long, vector<Sugar*>> theList;
 	AdjacencyList() { }
 	~AdjacencyList() { }
 
-	vector<Sugar*> search(int ID);
+	vector<Sugar*> search(unsigned long long ID);
 
 private:
 
@@ -68,57 +69,75 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 
 	//will have vector with all of the sugars in them
 	string readInData; //read in the line in file
-
+	string header;//skip first line(header) when looping 
+	string tempID;
 	string ingredients;
 
-	int ID = -1; //read in ID in while loop
+	double ID = 0.0; //read in ID in while loop
+	unsigned long long temp;
 
-
-	ifstream csv_rdr("branded_foods (id,brand,ingredients )-t.txt");
+	ifstream csv_rdr("branded_foods.csv"); // (id,brand,ingredients )-t.txt
 	//^reading tab delimited file
+	ofstream myfile;
 
-	bool header = true;//skip first line(header) when looping 
+	myfile.open("newFood.csv");
 
-	while (getline(csv_rdr, readInData)) //will be getline
+	if (csv_rdr.is_open())
 	{
+		getline(csv_rdr, header); //skips header
 
-		//read in, FIX
-	   //readInData = ""; //read in, FIX
-		if (header == true) {
-			header = false;
-			continue;
-		}
-		ID = stoi(readInData.substr(0, readInData.find_first_of("\t")));//			
-		readInData = readInData.substr(readInData.find_first_of("\t") + 2);
-
-		ingredients = readInData.substr(readInData.find_first_of("\t") + 1);
-
-		for (int i = 0; i < ingredients.length(); i++) {//tolower to make find simpler
-			ingredients[i] = tolower(ingredients[i]);
-		}
-
-		adjList.theList[ID] = { };
-
-		for (int i = 0; i < sugars.size(); i++)
+		while (getline(csv_rdr, readInData)) //will be getline
 		{
-			if (ingredients.find(sugars.at(i)->name) != string::npos)
+
+			//read in, FIX
+		   //readInData = ""; //read in, FIX
+
+			istringstream stream(readInData);
+
+			getline(stream, tempID, ',');
+			getline(stream, ingredients, '\n');
+
+			try
 			{
-				adjList.theList.at(ID).push_back(sugars.at(i)); //insert sugar in hashmap at ID
-				edList.theList.push_back({ ID, sugars.at(i) }); //insert pair in vector
+				ID = stod(tempID);
 			}
+			catch (const std::exception&)
+			{
+				continue;
+			}
+
+			//readInData = readInData.substr(readInData.find_first_of(",") + 2);
+
+			//ingredients = readInData.substr(readInData.find_first_of("\t") + 1);
+
+			adjList.theList[ID] = { };
+			temp = ID;
+
+			myfile << temp << ',';
+
+			for (int i = 0; i < sugars.size(); i++)
+			{
+				if (ingredients.find(sugars.at(i)->name) != string::npos)
+				{
+					//adjList.theList.at(ID).push_back(sugars.at(i)); //insert sugar in hashmap at ID
+					//edList.theList.push_back({ ID, sugars.at(i) }); //insert pair in vector
+					myfile << i << ',';
+				}
+			}
+			myfile << '\n';
+
 		}
-
 	}
-
 	csv_rdr.close();
+	myfile.close();
 }
 
 
-vector<Sugar*> AdjacencyList::search(int ID) {
+vector<Sugar*> AdjacencyList::search(unsigned long long ID) {
 	return this->theList[ID];
 }
 
-vector<Sugar*> EdgeList::search(int ID) {
+vector<Sugar*> EdgeList::search(unsigned long long ID) {
 
 	vector<Sugar*> sugarList;
 
@@ -133,7 +152,18 @@ vector<Sugar*> EdgeList::search(int ID) {
 	return sugarList;
 }
 
-vector<string> makeSugarVector();
+vector<string> makeSugarVector() {
+	return {
+		"CORN SWEETENER","ETHYL MALTOL","CORN SYRUP","DEXTROSE","FRUCTOSE","FRUIT JUICE CONCENTRATE"
+		"GLUCOSE","HIGH-FRUCTOSE CORN SYRUP", "HIGH FRUCTOSE CORN SYRUP", "INVERT SUGAR","LACTOSE"
+		"MALTOSE","MALT SYRUP","RAW SUGAR","SUCROSE","SUGAR SYRUP",
+		"FLORIDA CRYSTALS","CANE SUGAR","CRYSTALLINE FRUCTOSE",
+		"EVAPORATED CANE JUICE","CORN SYRUP SOLIDS","MALT SYRUP",
+		"BARLEY MALT","AGAVE NECTAR","RICE SYRUP","CARAMEL",
+		"PANOCHA","MUSCOVADO","MOLASSES","TREACLE","CAROB SYRUP"
+
+	};
+}
 
 int main() {
 
@@ -151,7 +181,7 @@ int main() {
 
 	readInData(adjList, edgList, allSugars);
 
-	int searchForID = 0;
+	unsigned long long searchForID = 0;
 	vector<Sugar*> retrievedSugars;
 
 	while (true)
@@ -169,21 +199,12 @@ int main() {
 
 		retrievedSugars = adjList.search(searchForID);
 
+		for (auto var : retrievedSugars) {
+			cout << var->name << " ";
+		}
+
 	}
 
 
 	return 0;
-}
-
-vector <string> makeSugarVector() {
-	
-	return {
-			"corn sweetener","ethyl maltol","corn syrup","dextrose","fructose","fruit juice concentrate"
-			"glucose","high-fructose corn syrup","invert sugar","lactose"
-			"maltose","malt syrup","raw sugar","sucrose","sugar syrup",
-			"florida crystals","cane sugar","crystalline fructose",
-			"evaporated cane juice","corn syrup solids","malt syrup",
-			"barley malt","agave nectar","rice syrup","caramel",
-			"panocha","muscovado","molasses","treacle","carob syrup"
-	};
 }
