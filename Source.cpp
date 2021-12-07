@@ -1,4 +1,4 @@
-#include "Header1.h"
+//#include "Header1.h"
 #include <vector>
 #include <unordered_map>
 #include <vector>
@@ -72,7 +72,7 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 	string ingredients;
 
 	int ID = -1; //read in ID in while loop
-	
+
 
 	ifstream csv_rdr("branded_foods (id,brand,ingredients )-t.txt");
 	//^reading tab delimited file
@@ -92,11 +92,12 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 		readInData = readInData.substr(readInData.find_first_of("\t") + 2);
 
 		ingredients = readInData.substr(readInData.find_first_of("\t") + 1);
-		
+
 		for (int i = 0; i < ingredients.length(); i++) {//tolower to make find simpler
 			ingredients[i] = tolower(ingredients[i]);
 		}
 
+		adjList.theList[ID] = { };
 
 		for (int i = 0; i < sugars.size(); i++)
 		{
@@ -132,19 +133,12 @@ vector<Sugar*> EdgeList::search(int ID) {
 	return sugarList;
 }
 
+vector<string> makeSugarVector();
+
 int main() {
 
-	
-	vector<string> sugars_string = {
-		"corn sweetener","ethyl maltol","corn syrup","dextrose","fructose","fruit juice concentrate"
-		"glucose","high-fructose corn syrup","invert sugar","lactose"
-		"maltose","malt syrup","raw sugar","sucrose","sugar syrup",
-		"florida crystals","cane sugar","crystalline fructose",
-		"evaporated cane juice","corn syrup solids","malt syrup",
-		"barley malt","agave nectar","rice syrup","caramel",
-		"panocha","muscovado","molasses","treacle","carob syrup"
 
-	};//size = 30
+	vector<string> sugars_string = makeSugarVector(); //size = 30
 
 	vector<Sugar*> allSugars;
 
@@ -152,8 +146,44 @@ int main() {
 		allSugars.push_back(new Sugar(s));
 	}
 
+	AdjacencyList adjList; //FIX make space for all possible IDs
+	EdgeList edgList;
+
+	readInData(adjList, edgList, allSugars);
+
+	int searchForID = 0;
+	vector<Sugar*> retrievedSugars;
+
+	while (true)
+	{
+		cout << "Enter the ID: ";
+
+		cin >> searchForID;
+
+		cout << endl;
+
+		if (searchForID == 0)
+		{
+			break;
+		}
+
+		retrievedSugars = adjList.search(searchForID);
+
+	}
+
 
 	return 0;
+}
 
-
+vector <string> makeSugarVector() {
+	
+	return {
+			"corn sweetener","ethyl maltol","corn syrup","dextrose","fructose","fruit juice concentrate"
+			"glucose","high-fructose corn syrup","invert sugar","lactose"
+			"maltose","malt syrup","raw sugar","sucrose","sugar syrup",
+			"florida crystals","cane sugar","crystalline fructose",
+			"evaporated cane juice","corn syrup solids","malt syrup",
+			"barley malt","agave nectar","rice syrup","caramel",
+			"panocha","muscovado","molasses","treacle","carob syrup"
+	};
 }
