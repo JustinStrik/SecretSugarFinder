@@ -18,23 +18,7 @@ public:
 	~Sugar() {}
 };
 
-//class Food
-//{
-//public:
-//	int ID;
-//	string name;
-//	string ingredients;
-//
-//	Food() {}
-//	Food(int ID, string name) {
-//		this->ID = ID;
-//		this->name = name;
-//	}
-//	~Food() {}
-//
-//private:
-//
-//};
+vector<string> makeSugarVector();
 
 class EdgeList
 {
@@ -165,19 +149,6 @@ vector<Sugar*> EdgeList::search(unsigned long long ID) {
 	return sugarList;
 }
 
-vector<string> makeSugarVector() {
-	return {
-		"CORN SWEETENER","ETHYL MALTOL","CORN SYRUP","DEXTROSE","FRUCTOSE","FRUIT JUICE CONCENTRATE"
-		"GLUCOSE","HIGH-FRUCTOSE CORN SYRUP", "HIGH FRUCTOSE CORN SYRUP", "INVERT SUGAR","LACTOSE"
-		"MALTOSE","MALT SYRUP","RAW SUGAR","SUCROSE","SUGAR SYRUP",
-		"FLORIDA CRYSTALS","CANE SUGAR","CRYSTALLINE FRUCTOSE",
-		"EVAPORATED CANE JUICE","CORN SYRUP SOLIDS","MALT SYRUP",
-		"BARLEY MALT","AGAVE NECTAR","RICE SYRUP","CARAMEL",
-		"PANOCHA","MUSCOVADO","MOLASSES","TREACLE","CAROB SYRUP"
-
-	};
-}
-
 int main() {
 
 
@@ -193,7 +164,7 @@ int main() {
 	EdgeList edgList;
 
 	cout << "Hold on.." << endl;
-	cout << "We are loading in millions of data points." << endl;
+	cout << "We are loading in a LOT of data points." << endl;
 	cout << "This could take a minute." << endl;
 	readInData(adjList, edgList, allSugars);
 	cout << "All done!" << endl << endl;
@@ -203,9 +174,14 @@ int main() {
 
 	while (true)
 	{
-		cout << "Enter the ID: ";
+		cout << "Enter the ID of your food (or 0 to quit): ";
 
 		cin >> searchForID;
+
+		if (searchForID == 0)
+		{
+			break;
+		}
 
 		if (to_string(searchForID).length() < 11) //to make it 11 digits
 		{
@@ -214,20 +190,37 @@ int main() {
 
 		cout << endl;
 
-		if (searchForID == 0)
-		{
-			break;
-		}
-
 		retrievedSugars = adjList.search(searchForID);
 
-		cout << "Our system found that the ingredients contain the following hidden sugar keywords: " << endl;
-		for (auto sugar : retrievedSugars) {
-			cout << sugar->name << endl;
+		if (retrievedSugars.size() == 0) //there were no sugars found
+		{
+			cout << "Our system did not find any hidden sugars!" << endl;
 		}
+		else //1 or more sugars found
+		{
+			cout << "Our system found that the ingredients contain the following hidden sugar keywords: " << endl;
+			for (auto sugar : retrievedSugars) {
+				cout << sugar->name << endl;
+			}
+		}
+		
 
 	}
 
 
 	return 0;
+}
+
+
+vector<string> makeSugarVector() {
+	return {
+		"CORN SWEETENER","ETHYL MALTOL","CORN SYRUP","DEXTROSE","FRUCTOSE","FRUIT JUICE CONCENTRATE"
+		"GLUCOSE","HIGH-FRUCTOSE CORN SYRUP", "HIGH FRUCTOSE CORN SYRUP", "INVERT SUGAR","LACTOSE"
+		"MALTOSE","MALT SYRUP","RAW SUGAR","SUCROSE","SUGAR SYRUP",
+		"FLORIDA CRYSTALS","CANE SUGAR","CRYSTALLINE FRUCTOSE",
+		"EVAPORATED CANE JUICE","CORN SYRUP SOLIDS","MALT SYRUP",
+		"BARLEY MALT","AGAVE NECTAR","RICE SYRUP","CARAMEL",
+		"PANOCHA","MUSCOVADO","MOLASSES","TREACLE","CAROB SYRUP"
+
+	};
 }
