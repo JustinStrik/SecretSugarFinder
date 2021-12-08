@@ -7,6 +7,8 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <time.h>
+#include <chrono>
 using namespace std;
 
 class Sugar
@@ -104,6 +106,10 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 			{
 				if (tempInt != "")
 				{
+					if (ID == 13000514910)
+					{
+						cout << "what";
+					}
 					sugarVal = stoi(tempInt);
 					adjList.theList.at(ID).push_back(sugars.at(sugarVal)); //insert sugar in hashmap at ID
 					edList.theList.push_back({ ID, sugars.at(sugarVal) }); //insert pair in vector
@@ -111,17 +117,6 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 				else
 					break;
 			}
-
-		//	for (int i = 0; i < sugars.size(); i++)
-		//	{
-		//		if (ingredients.find(sugars.at(i)->name) != string::npos)
-		//		{
-		//			//adjList.theList.at(ID).push_back(sugars.at(i)); //insert sugar in hashmap at ID
-		//			//edList.theList.push_back({ ID, sugars.at(i) }); //insert pair in vector
-		//			myfile << i << ',';
-		//		}
-		//	}
-		//	myfile << '\n';
 
 		}
 	}
@@ -153,7 +148,6 @@ int main() {
 
 
 	vector<string> sugars_string = makeSugarVector(); //size = 30
-
 	vector<Sugar*> allSugars;
 
 	for (string s : sugars_string) { //filling allSugars
@@ -165,32 +159,88 @@ int main() {
 
 	cout << "Hold on.." << endl;
 	cout << "We are loading in a LOT of data points." << endl;
-	cout << "This could take a minute." << endl;
+	cout << "This could take a minute." << endl << endl;
 	readInData(adjList, edgList, allSugars);
 	cout << "All done!" << endl << endl;
 
-	unsigned long long searchForID = 0;
+	string tempInput;
+	long long searchForID = 0;
+	bool validInput = false;
+	bool timeAnalysis = false; //whether or not time analysis is being done
 	vector<Sugar*> retrievedSugars;
+	vector<Sugar*> edgeRetrievedSugars; //only used when analyzing time
+	auto startEdg = chrono::steady_clock::now();
+	auto endEdg = chrono::steady_clock::now();
+
+
 
 	while (true)
 	{
-		cout << "Enter the ID of your food (or 0 to quit): ";
-
-		cin >> searchForID;
-
-		if (searchForID == 0)
+		while (!validInput) //while invalid input
 		{
-			break;
-		}
+			cout << endl;
 
-		if (to_string(searchForID).length() < 11) //to make it 11 digits
+			if (!timeAnalysis)
+				cout << "Enter the ID of your food (or 0 to quit, or -1 to do time analysis): ";
+			else
+				cout << "Enter the ID of your food (or 0 to quit, or -1 to EXIT time analysis): ";
+
+			cin >> tempInput;
+			try //to check if a string is entered
+			{
+				searchForID = stoll(tempInput);
+			}
+			catch (const std::exception&)
+			{
+				cout << "Please enter a valid number." << endl;
+				continue;
+			}
+
+			if (searchForID == -1) //time analysis mode
+			{
+				timeAnalysis = !timeAnalysis; //switch T/F
+
+				if (timeAnalysis)
+				{
+					cout << "You have chosen to do time analysis!" << endl;
+					cout << "We will be comparing Adjacency Lists and Edge List execution times" << endl;
+					cout << "for your input." << endl;
+				}
+			}
+			else if (searchForID < 0)
+			{
+				cout << "Barcodes can't be negative, silly!" << endl;
+				cout << "Please enter a valid ID." << endl;
+			}
+			else if (to_string(searchForID).size() > 12) //larger than USDA barcode threshold (but most all are 11 anyway)
+			{
+				cout << "This number too large." << endl;
+				cout << "Please enter a valid ID." << endl;
+			}
+			else
+				validInput = true;
+		}
+		validInput = false;
+		
+
+		if (searchForID == 0) //quit
+			break;
+
+		if (to_string(searchForID).length() < 11) //to make it 11 digits, the standard size
 		{
 			searchForID *= pow(10.0, 11 - to_string(searchForID).length());
 		}
 
-		cout << endl;
-
+		auto startAdj = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
 		retrievedSugars = adjList.search(searchForID);
+		auto endAdj = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
+
+		if (timeAnalysis)
+		{
+			auto startEdg = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
+			edgeRetrievedSugars = edgList.search(searchForID);
+			auto endEdg = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
+		}
 
 		if (retrievedSugars.size() == 0) //there were no sugars found
 		{
@@ -198,13 +248,31 @@ int main() {
 		}
 		else //1 or more sugars found
 		{
-			cout << "Our system found that the ingredients contain the following hidden sugar keywords: " << endl;
+			if (timeAnalysis)
+				cout << "The Adjacency List found that the ingredients contain the following hidden sugar keywords: " << endl;
+			else
+				cout << "Our system found that the ingredients contain the following hidden sugar keywords: " << endl;
 			for (auto sugar : retrievedSugars) {
 				cout << sugar->name << endl;
 			}
-		}
-		
 
+			if (timeAnalysis)
+			{
+				cout << "The Edge List found that the ingredients contain the following hidden sugar keywords: " << endl;
+
+				for (auto sugar : edgeRetrievedSugars) {
+					cout << sugar->name << endl;
+				}
+			}
+		}
+		cout << endl;
+
+		if (timeAnalysis)
+		{
+			std::cout << "Time taken for adjacency list implementation = " << chrono::duration_cast<std::chrono::microseconds>(endAdj - startAdj).count() << "[microseconds]" << std::endl;
+			std::cout << "Time taken for edge list implementation = " << chrono::duration_cast<std::chrono::microseconds>(endEdg - startEdg).count() << "[microseconds]" << std::endl;
+
+		}
 	}
 
 
