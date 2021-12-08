@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cmath>
 using namespace std;
 
 class Sugar
@@ -70,17 +71,18 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 	//will have vector with all of the sugars in them
 	string readInData; //read in the line in file
 	string header;//skip first line(header) when looping 
-	string tempID;
+	string tempID, tempInt;
 	string ingredients;
+	int sugarVal;
 
-	double ID = 0.0; //read in ID in while loop
-	unsigned long long temp;
+	//double ID = 0.0; //read in ID in while loop
+	unsigned long long ID, temp;
 
-	ifstream csv_rdr("branded_foods.csv"); // (id,brand,ingredients )-t.txt
+	ifstream csv_rdr("newFood.csv"); // (id,brand,ingredients )-t.txt
 	//^reading tab delimited file
-	ofstream myfile;
+	//ofstream myfile;
 
-	myfile.open("newFood.csv");
+	//csv_rdr.open("newFood.csv");
 
 	if (csv_rdr.is_open())
 	{
@@ -95,41 +97,52 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 			istringstream stream(readInData);
 
 			getline(stream, tempID, ',');
-			getline(stream, ingredients, '\n');
+			//getline(stream, ingredients, '\n');
 
-			try
-			{
-				ID = stod(tempID);
-			}
+			/*try
+			{*/
+			ID = stoull(tempID);
+			/*}
 			catch (const std::exception&)
 			{
 				continue;
-			}
+			}*/
 
 			//readInData = readInData.substr(readInData.find_first_of(",") + 2);
 
 			//ingredients = readInData.substr(readInData.find_first_of("\t") + 1);
 
 			adjList.theList[ID] = { };
-			temp = ID;
+			//temp = ID;
 
-			myfile << temp << ',';
-
-			for (int i = 0; i < sugars.size(); i++)
+			//myfile << temp << ',';
+			while (getline(stream, tempInt, ','))
 			{
-				if (ingredients.find(sugars.at(i)->name) != string::npos)
+				if (tempInt != "")
 				{
-					//adjList.theList.at(ID).push_back(sugars.at(i)); //insert sugar in hashmap at ID
-					//edList.theList.push_back({ ID, sugars.at(i) }); //insert pair in vector
-					myfile << i << ',';
+					sugarVal = stoi(tempInt);
+					adjList.theList.at(ID).push_back(sugars.at(sugarVal)); //insert sugar in hashmap at ID
+					edList.theList.push_back({ ID, sugars.at(sugarVal) }); //insert pair in vector
 				}
+				else
+					break;
 			}
-			myfile << '\n';
+
+		//	for (int i = 0; i < sugars.size(); i++)
+		//	{
+		//		if (ingredients.find(sugars.at(i)->name) != string::npos)
+		//		{
+		//			//adjList.theList.at(ID).push_back(sugars.at(i)); //insert sugar in hashmap at ID
+		//			//edList.theList.push_back({ ID, sugars.at(i) }); //insert pair in vector
+		//			myfile << i << ',';
+		//		}
+		//	}
+		//	myfile << '\n';
 
 		}
 	}
 	csv_rdr.close();
-	myfile.close();
+	//myfile.close();
 }
 
 
@@ -179,7 +192,11 @@ int main() {
 	AdjacencyList adjList; //FIX make space for all possible IDs
 	EdgeList edgList;
 
+	cout << "Hold on.." << endl;
+	cout << "We are loading in millions of data points." << endl;
+	cout << "This could take a minute." << endl;
 	readInData(adjList, edgList, allSugars);
+	cout << "All done!" << endl << endl;
 
 	unsigned long long searchForID = 0;
 	vector<Sugar*> retrievedSugars;
@@ -190,6 +207,11 @@ int main() {
 
 		cin >> searchForID;
 
+		if (to_string(searchForID).length() < 11) //to make it 11 digits
+		{
+			searchForID *= pow(10.0, 11 - to_string(searchForID).length());
+		}
+
 		cout << endl;
 
 		if (searchForID == 0)
@@ -199,8 +221,9 @@ int main() {
 
 		retrievedSugars = adjList.search(searchForID);
 
-		for (auto var : retrievedSugars) {
-			cout << var->name << " ";
+		cout << "Our system found that the ingredients contain the following hidden sugar keywords: " << endl;
+		for (auto sugar : retrievedSugars) {
+			cout << sugar->name << endl;
 		}
 
 	}
