@@ -1,4 +1,3 @@
-//#include "Header1.h"
 #include <vector>
 #include <unordered_map>
 #include <vector>
@@ -56,60 +55,35 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 
 	//will have vector with all of the sugars in them
 	string readInData; //read in the line in file
-	string header;//skip first line(header) when looping 
 	string tempID, tempInt;
 	string ingredients;
 	int sugarVal;
 
-	//double ID = 0.0; //read in ID in while loop
 	unsigned long long ID, temp;
 
-	ifstream csv_rdr("newFood.csv"); // (id,brand,ingredients )-t.txt
-	//^reading tab delimited file
-	//ofstream myfile;
-
-	//csv_rdr.open("newFood.csv");
+	ifstream csv_rdr("foods.csv"); 
 
 	if (csv_rdr.is_open())
 	{
-		getline(csv_rdr, header); //skips header
+		getline(csv_rdr, readInData); //skips header
 
 		while (getline(csv_rdr, readInData)) //will be getline
 		{
 
-			//read in, FIX
-		   //readInData = ""; //read in, FIX
-
 			istringstream stream(readInData);
 
 			getline(stream, tempID, ',');
-			//getline(stream, ingredients, '\n');
 
-			/*try
-			{*/
+
 			ID = stoull(tempID);
-			/*}
-			catch (const std::exception&)
-			{
-				continue;
-			}*/
 
-			//readInData = readInData.substr(readInData.find_first_of(",") + 2);
-
-			//ingredients = readInData.substr(readInData.find_first_of("\t") + 1);
 
 			adjList.theList[ID] = { };
-			//temp = ID;
 
-			//myfile << temp << ',';
 			while (getline(stream, tempInt, ','))
 			{
 				if (tempInt != "")
 				{
-					if (ID == 13000514910)
-					{
-						cout << "what";
-					}
 					sugarVal = stoi(tempInt);
 					adjList.theList.at(ID).push_back(sugars.at(sugarVal)); //insert sugar in hashmap at ID
 					edList.theList.push_back({ ID, sugars.at(sugarVal) }); //insert pair in vector
@@ -121,25 +95,34 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 		}
 	}
 	csv_rdr.close();
-	//myfile.close();
 }
 
 
 vector<Sugar*> AdjacencyList::search(unsigned long long ID) {
+	
+	if (this->theList.count(ID) == 0)
+	{
+		return { nullptr }; //returns a single nullptr vector if the ID is not found
+	}
 	return this->theList[ID];
 }
 
 vector<Sugar*> EdgeList::search(unsigned long long ID) {
 
 	vector<Sugar*> sugarList;
+	bool exists = false;
 
 	for (auto var : this->theList)
 	{
 		if (var.first == ID)
 		{
+			exists = true;
 			sugarList.push_back(var.second);
 		}
 	}
+
+	if (!exists) //ID does not exist in database
+		return { nullptr };
 
 	return sugarList;
 }
@@ -212,7 +195,7 @@ int main() {
 				cout << "Barcodes can't be negative, silly!" << endl;
 				cout << "Please enter a valid ID." << endl;
 			}
-			else if (to_string(searchForID).size() > 12) //larger than USDA barcode threshold (but most all are 11 anyway)
+			else if (to_string(searchForID).size() > 15) //larger than USDA barcode threshold
 			{
 				cout << "This number too large." << endl;
 				cout << "Please enter a valid ID." << endl;
@@ -221,30 +204,31 @@ int main() {
 				validInput = true;
 		}
 		validInput = false;
-		
+
 
 		if (searchForID == 0) //quit
 			break;
 
-		if (to_string(searchForID).length() < 11) //to make it 11 digits, the standard size
-		{
-			searchForID *= pow(10.0, 11 - to_string(searchForID).length());
-		}
-
-		auto startAdj = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
+		auto startAdj = chrono::steady_clock::now(); 
 		retrievedSugars = adjList.search(searchForID);
-		auto endAdj = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
+		auto endAdj = chrono::steady_clock::now();
 
 		if (timeAnalysis)
 		{
-			auto startEdg = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
+			startEdg = chrono::steady_clock::now(); 
 			edgeRetrievedSugars = edgList.search(searchForID);
-			auto endEdg = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
+			endEdg = chrono::steady_clock::now();
 		}
 
+		
 		if (retrievedSugars.size() == 0) //there were no sugars found
 		{
 			cout << "Our system did not find any hidden sugars!" << endl;
+		}
+		else if (retrievedSugars[0] == nullptr)
+		{
+			cout << "That barcode does not appear to exist in our database." << endl;
+			cout << "Did you miss some numbers on the end?" << endl;
 		}
 		else //1 or more sugars found
 		{
@@ -258,7 +242,15 @@ int main() {
 
 			if (timeAnalysis)
 			{
-				cout << "The Edge List found that the ingredients contain the following hidden sugar keywords: " << endl;
+				if (edgeRetrievedSugars.size() == 0)
+					cout << "Our system did not find any hidden sugars!" << endl;
+				else if (edgeRetrievedSugars[0] == nullptr)
+				{
+					cout << "That barcode does not appear to exist in our database." << endl;
+					cout << "Did you miss some numbers on the end?" << endl;
+				}
+				else
+					cout << "The Edge List found that the ingredients contain the following hidden sugar keywords: " << endl;
 
 				for (auto sugar : edgeRetrievedSugars) {
 					cout << sugar->name << endl;
@@ -275,7 +267,7 @@ int main() {
 		}
 	}
 
-
+	 
 	return 0;
 }
 
@@ -288,7 +280,7 @@ vector<string> makeSugarVector() {
 		"FLORIDA CRYSTALS","CANE SUGAR","CRYSTALLINE FRUCTOSE",
 		"EVAPORATED CANE JUICE","CORN SYRUP SOLIDS","MALT SYRUP",
 		"BARLEY MALT","AGAVE NECTAR","RICE SYRUP","CARAMEL",
-		"PANOCHA","MUSCOVADO","MOLASSES","TREACLE","CAROB SYRUP"
+		"PANOCHA","MUSCOVADO","MOLASSES","TREACLE","CAROB SYRUP", "SUGAR", "SYRUP"
 
 	};
 }
