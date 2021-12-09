@@ -5,10 +5,6 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <sstream>
-#include <cmath>
-#include <time.h>
-#include <chrono>
 using namespace std;
 
 class Sugar
@@ -20,17 +16,33 @@ public:
 	~Sugar() {}
 };
 
-vector<string> makeSugarVector();
+//class Food
+//{
+//public:
+//	int ID;
+//	string name;
+//	string ingredients;
+//
+//	Food() {}
+//	Food(int ID, string name) {
+//		this->ID = ID;
+//		this->name = name;
+//	}
+//	~Food() {}
+//
+//private:
+//
+//};
 
 class EdgeList
 {
 public:
 	//pair between the food and the sugar
-	vector<pair<unsigned long long, Sugar*>> theList; //ID and sugar
+	vector<pair<int, Sugar*>> theList; //ID and sugar
 	EdgeList() {}
 	~EdgeList() {}
 
-	vector<Sugar*> search(unsigned long long ID);
+	vector<Sugar*> search(int ID);
 
 private:
 
@@ -42,11 +54,11 @@ public:
 
 	/*int is the ID, the vector is the complete list of sugars, and when the sugar is in the list of ingredients
 	the number is either 1 (if the graph is unwieghted) or the weight if it is weighted*/
-	unordered_map<unsigned long long, vector<Sugar*>> theList;
+	unordered_map<int, vector<Sugar*>> theList;
 	AdjacencyList() { }
 	~AdjacencyList() { }
 
-	vector<Sugar*> search(unsigned long long ID);
+	vector<Sugar*> search(int ID);
 
 private:
 
@@ -56,80 +68,57 @@ void readInData(AdjacencyList& adjList, EdgeList& edList, vector<Sugar*> sugars)
 
 	//will have vector with all of the sugars in them
 	string readInData; //read in the line in file
-	string header;//skip first line(header) when looping 
-	string tempID, tempInt;
+
 	string ingredients;
-	int sugarVal;
 
-	//double ID = 0.0; //read in ID in while loop
-	unsigned long long ID, temp;
+	int ID = -1; //read in ID in while loop
 
-	ifstream csv_rdr("newFood.csv"); // (id,brand,ingredients )-t.txt
+
+	ifstream csv_rdr("branded_foods (id,brand,ingredients )-t.txt");
 	//^reading tab delimited file
-	//ofstream myfile;
 
-	//csv_rdr.open("newFood.csv");
+	bool header = true;//skip first line(header) when looping 
 
-	if (csv_rdr.is_open())
+	while (getline(csv_rdr, readInData)) //will be getline
 	{
-		getline(csv_rdr, header); //skips header
 
-		while (getline(csv_rdr, readInData)) //will be getline
-		{
-
-			//read in, FIX
-		   //readInData = ""; //read in, FIX
-
-			istringstream stream(readInData);
-
-			getline(stream, tempID, ',');
-			//getline(stream, ingredients, '\n');
-
-			/*try
-			{*/
-			ID = stoull(tempID);
-			/*}
-			catch (const std::exception&)
-			{
-				continue;
-			}*/
-
-			//readInData = readInData.substr(readInData.find_first_of(",") + 2);
-
-			//ingredients = readInData.substr(readInData.find_first_of("\t") + 1);
-
-			adjList.theList[ID] = { };
-			//temp = ID;
-
-			//myfile << temp << ',';
-			while (getline(stream, tempInt, ','))
-			{
-				if (tempInt != "")
-				{
-					if (ID == 13000514910)
-					{
-						cout << "what";
-					}
-					sugarVal = stoi(tempInt);
-					adjList.theList.at(ID).push_back(sugars.at(sugarVal)); //insert sugar in hashmap at ID
-					edList.theList.push_back({ ID, sugars.at(sugarVal) }); //insert pair in vector
-				}
-				else
-					break;
-			}
-
+		//read in, FIX
+	   //readInData = ""; //read in, FIX
+		if (header == true) {
+			header = false;
+			continue;
 		}
+		ID = stoi(readInData.substr(0, readInData.find_first_of("\t")));//			
+		readInData = readInData.substr(readInData.find_first_of("\t") + 2);
+
+		ingredients = readInData.substr(readInData.find_first_of("\t") + 1);
+
+		for (int i = 0; i < ingredients.length(); i++) {//tolower to make find simpler
+			ingredients[i] = tolower(ingredients[i]);
+		}
+
+		adjList.theList[ID] = { };
+
+		for (int i = 0; i < sugars.size(); i++)
+		{
+			if (ingredients.find(sugars.at(i)->name) != string::npos)
+			{
+				adjList.theList.at(ID).push_back(sugars.at(i)); //insert sugar in hashmap at ID
+				edList.theList.push_back({ ID, sugars.at(i) }); //insert pair in vector
+			}
+		}
+
 	}
+
 	csv_rdr.close();
-	//myfile.close();
 }
 
 
-vector<Sugar*> AdjacencyList::search(unsigned long long ID) {
+vector<Sugar*> AdjacencyList::search(int ID) {
 	return this->theList[ID];
 }
 
-vector<Sugar*> EdgeList::search(unsigned long long ID) {
+vector<Sugar*> EdgeList::search(int ID) {
 
 	vector<Sugar*> sugarList;
 
@@ -144,10 +133,13 @@ vector<Sugar*> EdgeList::search(unsigned long long ID) {
 	return sugarList;
 }
 
+vector<string> makeSugarVector();
+
 int main() {
 
 
 	vector<string> sugars_string = makeSugarVector(); //size = 30
+
 	vector<Sugar*> allSugars;
 
 	for (string s : sugars_string) { //filling allSugars
@@ -157,138 +149,41 @@ int main() {
 	AdjacencyList adjList; //FIX make space for all possible IDs
 	EdgeList edgList;
 
-	cout << "Hold on.." << endl;
-	cout << "We are loading in a LOT of data points." << endl;
-	cout << "This could take a minute." << endl << endl;
 	readInData(adjList, edgList, allSugars);
-	cout << "All done!" << endl << endl;
 
-	string tempInput;
-	long long searchForID = 0;
-	bool validInput = false;
-	bool timeAnalysis = false; //whether or not time analysis is being done
+	int searchForID = 0;
 	vector<Sugar*> retrievedSugars;
-	vector<Sugar*> edgeRetrievedSugars; //only used when analyzing time
-	auto startEdg = chrono::steady_clock::now();
-	auto endEdg = chrono::steady_clock::now();
-
-
 
 	while (true)
 	{
-		while (!validInput) //while invalid input
-		{
-			cout << endl;
+		cout << "Enter the ID: ";
 
-			if (!timeAnalysis)
-				cout << "Enter the ID of your food (or 0 to quit, or -1 to do time analysis): ";
-			else
-				cout << "Enter the ID of your food (or 0 to quit, or -1 to EXIT time analysis): ";
+		cin >> searchForID;
 
-			cin >> tempInput;
-			try //to check if a string is entered
-			{
-				searchForID = stoll(tempInput);
-			}
-			catch (const std::exception&)
-			{
-				cout << "Please enter a valid number." << endl;
-				continue;
-			}
-
-			if (searchForID == -1) //time analysis mode
-			{
-				timeAnalysis = !timeAnalysis; //switch T/F
-
-				if (timeAnalysis)
-				{
-					cout << "You have chosen to do time analysis!" << endl;
-					cout << "We will be comparing Adjacency Lists and Edge List execution times" << endl;
-					cout << "for your input." << endl;
-				}
-			}
-			else if (searchForID < 0)
-			{
-				cout << "Barcodes can't be negative, silly!" << endl;
-				cout << "Please enter a valid ID." << endl;
-			}
-			else if (to_string(searchForID).size() > 12) //larger than USDA barcode threshold (but most all are 11 anyway)
-			{
-				cout << "This number too large." << endl;
-				cout << "Please enter a valid ID." << endl;
-			}
-			else
-				validInput = true;
-		}
-		validInput = false;
-		
-
-		if (searchForID == 0) //quit
-			break;
-
-		if (to_string(searchForID).length() < 11) //to make it 11 digits, the standard size
-		{
-			searchForID *= pow(10.0, 11 - to_string(searchForID).length());
-		}
-
-		auto startAdj = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
-		retrievedSugars = adjList.search(searchForID);
-		auto endAdj = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
-
-		if (timeAnalysis)
-		{
-			auto startEdg = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
-			edgeRetrievedSugars = edgList.search(searchForID);
-			auto endEdg = chrono::steady_clock::now(); //std::chrono::steady_clock::time_point 
-		}
-
-		if (retrievedSugars.size() == 0) //there were no sugars found
-		{
-			cout << "Our system did not find any hidden sugars!" << endl;
-		}
-		else //1 or more sugars found
-		{
-			if (timeAnalysis)
-				cout << "The Adjacency List found that the ingredients contain the following hidden sugar keywords: " << endl;
-			else
-				cout << "Our system found that the ingredients contain the following hidden sugar keywords: " << endl;
-			for (auto sugar : retrievedSugars) {
-				cout << sugar->name << endl;
-			}
-
-			if (timeAnalysis)
-			{
-				cout << "The Edge List found that the ingredients contain the following hidden sugar keywords: " << endl;
-
-				for (auto sugar : edgeRetrievedSugars) {
-					cout << sugar->name << endl;
-				}
-			}
-		}
 		cout << endl;
 
-		if (timeAnalysis)
+		if (searchForID == 0)
 		{
-			std::cout << "Time taken for adjacency list implementation = " << chrono::duration_cast<std::chrono::microseconds>(endAdj - startAdj).count() << "[microseconds]" << std::endl;
-			std::cout << "Time taken for edge list implementation = " << chrono::duration_cast<std::chrono::microseconds>(endEdg - startEdg).count() << "[microseconds]" << std::endl;
-
+			break;
 		}
+
+		retrievedSugars = adjList.search(searchForID);
+
 	}
 
 
 	return 0;
 }
 
-
-vector<string> makeSugarVector() {
+vector <string> makeSugarVector() {
+	
 	return {
-		"CORN SWEETENER","ETHYL MALTOL","CORN SYRUP","DEXTROSE","FRUCTOSE","FRUIT JUICE CONCENTRATE"
-		"GLUCOSE","HIGH-FRUCTOSE CORN SYRUP", "HIGH FRUCTOSE CORN SYRUP", "INVERT SUGAR","LACTOSE"
-		"MALTOSE","MALT SYRUP","RAW SUGAR","SUCROSE","SUGAR SYRUP",
-		"FLORIDA CRYSTALS","CANE SUGAR","CRYSTALLINE FRUCTOSE",
-		"EVAPORATED CANE JUICE","CORN SYRUP SOLIDS","MALT SYRUP",
-		"BARLEY MALT","AGAVE NECTAR","RICE SYRUP","CARAMEL",
-		"PANOCHA","MUSCOVADO","MOLASSES","TREACLE","CAROB SYRUP"
-
+			"corn sweetener","ethyl maltol","corn syrup","dextrose","fructose","fruit juice concentrate"
+			"glucose","high-fructose corn syrup","invert sugar","lactose"
+			"maltose","malt syrup","raw sugar","sucrose","sugar syrup",
+			"florida crystals","cane sugar","crystalline fructose",
+			"evaporated cane juice","corn syrup solids","malt syrup",
+			"barley malt","agave nectar","rice syrup","caramel",
+			"panocha","muscovado","molasses","treacle","carob syrup"
 	};
 }

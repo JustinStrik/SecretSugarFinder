@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/victoriadealba/Documents/GitHub/SecretSugarFinder/Source.cpp
+vector
+-
+unordered_map
+-
+vector
+-
+string
+-
+iostream
+-
+fstream
+-
+
